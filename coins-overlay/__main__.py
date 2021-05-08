@@ -1,4 +1,5 @@
 import sys
+import configparser
 import keyboard
 import tkinter as tk
 
@@ -11,27 +12,38 @@ class Score:
         self.scores.append(self)
     
     def increment(self, value=1):
-        self.total.set(self.total.get() + value)
+        t = self.total.get()
+        self.total.set(t + value)
 
     def decrement(self, value=1):
-        self.total.set(self.total.get() - abs(value))
+        t = self.total.get()
+        self.total.set(t - abs(value))
 
-
-def parse_keys(event):
-    Score.scores[0].decrement()
-    print(Score.scores[0].total)
-    # normalize_name()
 
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
     # arg parsing with argparse
-    
-    keyboard.on_press(parse_keys)
+
+    def parse_keys(event):
+        print(dir(event))
+        hotkey = getattr(score, keybinds[event.scan_code])
+        hotkey()
+
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    keybinds = {}
+    for key, value in config.items('BINDS'):
+        scan_code = keyboard.key_to_scan_codes(value)
+        keybinds[scan_code[0]] = key
+
+    print(keybinds)
 
     window = tk.Tk()
     score = Score()
+    keyboard.on_press(parse_keys)
     label = tk.Label(textvariable=Score.scores[0].total)
     label.pack()
 
